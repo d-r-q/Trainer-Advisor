@@ -27,6 +27,17 @@ class EditExercisePageController(
         }
     }
 
+
+    @GetMapping("/modal")
+    fun getEditExercisePageModal(@PathVariable exerciseId: Long): ModelAndView {
+        val exercise = exercisesService.findById(exerciseId)
+            ?: return notFound
+
+        return modelAndView("therapist/therapy/exercises/exercise-modal") {
+            "exercise" bindTo exercise
+        }
+    }
+
     @PutMapping
     fun editExercise(
         @PathVariable exerciseId: Long,

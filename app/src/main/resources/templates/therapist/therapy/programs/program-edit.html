@@ -229,14 +229,22 @@
                     </div>
 
                     <ul class="list-group list-group-flush g-0">
-                        <template :key="exercise.id" x-for="(exercise, idx) in exercises">
+                        <template :key="exercise.id" data-bs-target="#exercise-modal"
+                                  data-bs-toggle="modal" x-for="(exercise, idx) in exercises"
+                                  x-text="exercise.title">
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <input :value="exercise.id"
                                        name="exerciseIds"
                                        type="hidden">
                                 <div class="col-8">
-                                    <div class="text-truncate" x-text="exercise.title">
+                                    <button class="btn" data-bs-target="#exercise-modal" data-bs-toggle="modal"
+                                            type="button" x-text="exercise.title">
                                         Разминка для шеи
+                                    </button>
+
+                                    <div class="modal-content">
+                                        <div
+                                            th:replace="therapist/therapy/exercises/exercise-modal.html :: modal-content"></div>
                                     </div>
                                     <small class="text-muted"
                                            x-text="`${exercise.type.label}, ${exercise.duration} мин.`">
