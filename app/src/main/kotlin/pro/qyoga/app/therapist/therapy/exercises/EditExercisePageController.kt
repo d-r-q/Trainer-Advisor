@@ -32,7 +32,7 @@ class EditExercisePageController(
     fun getEditExercisePageModal(@PathVariable exerciseId: Long): ModelAndView {
         val exercise = exercisesService.findById(exerciseId)
             ?: return notFound
-
+        println(exercise.steps)
         return modelAndView("therapist/therapy/exercises/exercise-modal") {
             "exercise" bindTo exercise
         }
