@@ -6,205 +6,74 @@
 </head>
 <body class="sb-nav-fixed">
 
+<div class="modal-body">
+  <main>
+    <section class="container px-4">
+      <h1 class="mt-4 pb-2 mb-3 border-bottom"
+          th:text="${exercise?.title ?: 'Новое упражнение'}">Новое упражнение</h1>
+      <form class="mt-4"
+            enctype="multipart/form-data"
+            hx-post=""
+            id="exerciseForm"
+            th:attr="hx-post=${exercise == null ? '/therapist/exercises/create' : null},hx-put=${exercise != null ? '/therapist/exercises/' + exercise.id : null}"
+      >
 
-<div class="modal-dialog modal-dialog-centered modal-xl" id="exercise-modal">
-  <div class="modal-content">
+        <div class="row">
+          <div class="col-12 mb-3 col-sm-5 form-floating gx-2">
+            <input class="form-control "
+                   id="title"
+                   name="title"
+                   placeholder="Название упражнения"
+                   readonly
+                   required
+                   th:value="${exercise?.title ?: ''}"
+                   type="text"
+            >
+            <label for="title">Название упражнения</label>
+          </div>
 
-    <div class="modal-body">
-      <main>
-        <section class="container px-4">
-          <h1 class="mt-4 pb-2 mb-3 border-bottom"
-              th:text="${exercise?.title ?: 'Новое упражнение'}">Новое
-            упражнение</h1>
-          <form class="mt-4"
-                enctype="multipart/form-data"
-                hx-post=""
-                id="exerciseForm"
-                th:attr="hx-post=${exercise == null ? '/therapist/exercises/create' : null},hx-put=${exercise != null ? '/therapist/exercises/' + exercise.id : null}"
-          >
+          <div class="col-12 mb-3 col-sm-5 form-floating gx-2">
+            <input class="form-control"
+                   id="type"
+                   readonly
+                   th:value="${exercise?.exerciseType}">
+            <label for="type">Тип</label>
+          </div>
 
-            <div class="row">
-              <div class="col-12 mb-3 col-sm-5 form-floating gx-2">
-                <input class="form-control "
-                       id="title"
-                       name="title"
-                       placeholder="Название упражнения"
-                       readonly
-                       required
-                       th:value="${exercise?.title ?: ''}"
-                       type="text"
-                >
-                <label for="title">Название упражнения</label>
-              </div>
+          <div class="col-12 mb-3 col-sm-2 form-floating gx-2">
+            <input class="form-control"
+                   id="duration"
+                   max="180"
+                   min="0"
+                   name="duration"
+                   readonly
+                   required
+                   step="0.5"
+                   th:value="${T(pro.azhidkov.platform.java.time.DurationExtKt).toDecimalMinutes(exercise?.duration) ?: '1'}"
+                   type="number"
+            >
+            <label for="duration">Длительность</label>
+          </div>
+        </div>
 
-              <div class="col-12 mb-3 col-sm-5 form-floating gx-2">
-                <input class="form-control"
-                       id="type"
-                       readonly
-                       th:value="${exercise?.exerciseType}">
-                <label for="type">Тип</label>
-              </div>
-
-              <div class="col-12 mb-3 col-sm-2 form-floating gx-2">
-                <input class="form-control"
-                       id="duration"
-                       max="180"
-                       min="0"
-                       name="duration"
-                       readonly
-                       required
-                       step="0.5"
-                       th:value="${T(pro.azhidkov.platform.java.time.DurationExtKt).toDecimalMinutes(exercise?.duration) ?: '1'}"
-                       type="number"
-                >
-                <label for="duration">Длительность</label>
-              </div>
-
-            </div>
-
-            <div class="row mb-5">
-              <div class="col form-floating gx-2">
-
-                            <textarea class="form-control"
-                                      id="description"
-                                      name="description"
-
-                                      placeholder="Глубоко вдохните..."
-
-                                      required
-                                      rows="10"
-                                      style="height: 15rem"
-                                      readonly
-                                      th:text="${exercise?.description ?: ''}"
-                            >
-
-                            </textarea>
-                <label for="description">Описание упражнения</label>
-              </div>
-            </div>
-
-            <div class="border-1">
-              <ul class="nav nav-tabs mb-3">
-                <li class="nav-item">
-                  <a class="nav-link active"
-                     href="#">Шаги</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link disabled " href="#">Манипуляции</a>
-                </li>
-              </ul>
-              <div class="row">
-                <script th:inline="javascript">
-                  const noImage = "/img/no-image.png";
-
-                  var initialStepsData = [[${exercise?.steps}]];
-                  if (initialStepsData == null) {
-                    initialStepsData = [{"description": "", imageUrl: noImage, fileName: null}];
-                  }
-                  let initialSteps = initialStepsData.map(exerciseStep);
-
-                  function fileToDataUrl(event, callback) {
-                    if (!event.target.files.length) {
-                      return
-                    }
-
-                    let file = event.target.files[0],
-                        reader = new FileReader()
-
-                    reader.readAsDataURL(file)
-                    reader.onload = e => callback(e.target.result)
-                  }
-
-                  function exerciseStep(step, idx) {
-                    let exerciseId = /*[[${exercise?.id}]]*/ 0;
-                    let imageUrl = step?.imageId != null
-                        ? `/therapist/exercises/${exerciseId}/step-images/${idx}` : noImage;
-                    console.log(imageUrl)
-                    return {
-                      description: step?.description,
-                      imageUrl: step ? imageUrl : noImage,
-                      fileName: null,
-                      fileChosen(event) {
-                        fileToDataUrl(event, src => this.imageUrl = src)
-                      },
-                      removeImage() {
-
-                        this.imageUrl = noImage
-                        this.fileName = null
-                      }
-                    }
-                  }
-                </script>
-                <div id="steps" x-data="{steps: initialSteps}">
-                  <template x-for="(step, idx) in steps">
-                    <div class="card mb-3">
-                      <div class="mb-3 p  py-2 px-3 bg-light d-flex align-items-end rounded">
-                        <div class="col-9 col-sm-10 ">
-                          <h5 class="" x-text="`Шаг ${idx + 1}`"></h5>
-                        </div>
-
-                      </div>
-                      <div class="row align-items-center px-3 mb-3" x-data="step">
-                        <div class="col-sm-2 mb-3 text-center mx-auto">
-                          <label :for="`stepImageInput${idx}`" class="align-items-center">
-                            <div class="row h-100">
-                              <div class="col image-container text-end">
-
-                                <img :id="`stepImage${idx}`" :src="step.imageUrl"
-                                     class="mw-100 d-block"
-                                     style="max-height: 15rem; margin-top: -43px">
-                              </div>
-                            </div>
-                          </label>
-
-                          <input :id="`stepImageInput${idx}`" :name="`stepImage${idx}`"
-                                 @change="fileChosen"
-                                 accept="image/*"
-                                 class="form-control d-none" th:disabled="${exercise != null}"
-                                 type="file"
-                                 x-model="fileName"
-                          />
-                        </div>
-                        <div class="col-sm-10 form-floating gx-2">
-                                                <textarea :name="`steps[${idx}].description`"
-                                                          class="form-control"
-                                                          placeholder="Глубоко вдохните..."
-                                                          required
-                                                          style="height: 15rem"
-                                                          readonly
-                                                          th:disabled="${exercise != null}"
-                                                          x-model="step.description"
-                                                >
-                                                </textarea>
-                          <label :for="`steps[${idx}].description`">Описание шага</label>
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-
-                </div>
-
-              </div>
-
-            </div>
-
-
-          </form>
-
-        </section>
-      </main>
-
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Close</button>
-    </div>
-
-
-  </div>
-
+        <div class="row mb-5">
+          <div class="col form-floating gx-2">
+                <textarea class="form-control"
+                          id="description"
+                          name="description"
+                          placeholder="Глубоко вдохните..."
+                          readonly
+                          required
+                          rows="10"
+                          style="height: 15rem"
+                          th:text="${exercise?.description ?: ''}">
+                </textarea>
+            <label for="description">Описание упражнения</label>
+          </div>
+        </div>
+      </form>
+    </section>
+  </main>
 </div>
-
-
 </body>
 </html>

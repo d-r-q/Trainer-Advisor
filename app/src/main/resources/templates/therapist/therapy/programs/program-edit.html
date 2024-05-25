@@ -3,6 +3,22 @@
 <head>
     <div th:replace="~{fragments/header.html}"></div>
     <title th:text="${program?.title ?: 'Новая программа'}">Новая программа</title>
+    <style>
+        .modal-lg {
+            max-width: 90%;
+        }
+
+        .modal-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .modal-body {
+            flex: 1 1 auto;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body class="sb-nav-fixed">
 
@@ -26,7 +42,27 @@
                     document.addEventListener('alpine:init', () => {
                         Alpine.data('programForm', () => ({
                             exercises: initialExercises,
-
+                            modalContent: '',
+                            async loadPage(exerciseId) {
+                                let url = `/therapist/exercises/${exerciseId}/modal`;
+                                let stepsUrl = `/therapist/exercises/${exerciseId}/steps`;
+                                let response = await fetch(url);
+                                let stepsResp = await fetch(stepsUrl);
+                                if (response.ok && stepsResp.ok) {
+                                    this.modalContent = await response.text()
+                                        + await stepsResp.text();
+                                    this.updateModal();
+                                } else {
+                                    console.error('Error loading page');
+                                }
+                            },
+                            updateModal() {
+                                let modalElement = document.getElementById('modals-here');
+                                modalElement.querySelector(
+                                    '.modal-content .modal-body').innerHTML = this.modalContent;
+                                var myModal = new bootstrap.Modal(modalElement);
+                                myModal.show();
+                            },
                             remove(idx) {
                                 this.exercises.splice(idx, 1);
                             },
@@ -239,56 +275,12 @@
                                        name="exerciseIds"
                                        type="hidden">
                                 <div class="col-8">
-                                    <!--                                    class="btn"-->
-
-                                    <script>
-                                        function fetchAndSetHxGetUrl(exerciseId) {
-                                            // Выполняем функцию createExerciseURL('exercise.id') и получаем URL
-                                            var url = createExerciseURL(exerciseId);
-
-                                            // Устанавливаем полученный URL в атрибут hx-get кнопки
-                                            document.getElementById("button").setAttribute('hx-get',
-                                                url);
-                                        }
-                                    </script>
-
-                                    <button
-                                        class="btn btn-primary"
-                                        data-bs-target="#modals-here"
-                                        data-bs-toggle="modal"
-                                        hx-get="/therapist/exercises/1/modal"
-                                        hx-target="#modals-here"
-                                        hx-trigger="click"
-                                        id="button"
-                                        onclick="fetchAndSetHxGetUrl('exercise.id')"
-                                        type="button"
-                                        x-text="exercise.title">
-                                        <!--                                        Разминка для шеи-->
-                                    </button>
-
-                                    <!--                                    th:data-user-id = "${exercise.id}"-->
-
-                                    <div aria-hidden="false"
-                                         class="modal modal-blur fade"
-                                         id="modals-here"
-                                         style="display: none"
-                                         tabindex="-1">
-                                        <div class="modal-dialog modal-lg modal-dialog-centered"
-                                             role="document">
-                                            <div class="modal-content"></div>
-                                        </div>
-                                    </div>
-
-                                    <!--                                    <div id="exercise-modal" class = "modal modal-blur fade">-->
-                                    <!--                                        <div-->
-                                    <!--                                            th:replace="therapist/therapy/exercises/exercise-modal.html :: modal-content"></div>-->
-                                    <!--                                    </div>-->
-
-
+                                    <button @click="loadPage(exercise.id)"
+                                            class="btn btn-primary"
+                                            type="button"
+                                            x-text="exercise.title"></button>
                                     <small class="text-muted"
-                                           x-text="`${exercise.type.label}, ${exercise.duration} мин.`">
-                                        Разминка, 10 мин
-                                    </small>
+                                           x-text="`${exercise.type.label}, ${exercise.duration} мин.`"></small>
                                 </div>
                                 <div class="btn-group h-fit-content ">
                                     <button @click="moveUp(idx)" class="btn btn-sm btn-outline-secondary"
@@ -307,6 +299,14 @@
                             </li>
                         </template>
                     </ul>
+
+                    <div class="modal modal-blur fade" id="modals-here" tabindex="-1">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-body" x-html="modalContent"></div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="row g-2 justify-content-end">
                         <div class="col-6 col-sm-auto text-center">
