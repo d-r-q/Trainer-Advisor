@@ -31,32 +31,6 @@ class EditExercisePageController(
     }
 
 
-    @GetMapping("/modal")
-    fun getEditExercisePageModal(@PathVariable exerciseId: Long): ModelAndView {
-        val exercise = exercisesService.findById(exerciseId)
-            ?: return notFound
-        println(exercise.steps)
-        return modelAndView("therapist/therapy/exercises/exercise-modal") {
-            "exercise" bindTo exercise
-        }
-    }
-
-    data class ProcessingExerciseStep(
-        var description: String,
-        var imageUrl: String = NO_IMAGE,
-        var fileName: String? = null
-    ) {
-        fun removeImage() {
-            this.imageUrl = NO_IMAGE
-            this.fileName = null
-        }
-
-        companion object {
-            const val NO_IMAGE = "/img/no-image.png"
-        }
-    }
-
-
     object ExerciseStepProcessor {
         const val NO_IMAGE = "/img/no-image.png"
         fun processSteps(
@@ -69,26 +43,35 @@ class EditExercisePageController(
                 steps.mapIndexed { idx, step ->
                     val imageUrl =
                         step.imageId?.let { "/therapist/exercises/$exerciseId/step-images/$idx" }
-                            ?: ProcessingExerciseStep.NO_IMAGE
+                            ?: NO_IMAGE
                     ProcessingExerciseStep(description = step.description, imageUrl = imageUrl)
                 }
             }
         }
     }
 
-    @GetMapping("/steps")
-    fun getStepsFragment(@PathVariable exerciseId: Long): ModelAndView {
+    @GetMapping("/modal")
+    fun getEditExercisePageModal(@PathVariable exerciseId: Long): ModelAndView {
         val exercise = exercisesService.findById(exerciseId)
+            ?: return notFound
 
         val processedSteps = processSteps(
-            exercise?.steps,
+            exercise.steps,
             exerciseId
         )
-        return modelAndView("therapist/therapy/exercises/steps") {
+
+        return modelAndView("therapist/therapy/exercises/exercise-modal") {
             "steps" bindTo processedSteps
             "exercise" bindTo exercise
         }
     }
+
+    data class ProcessingExerciseStep(
+        var description: String,
+        var imageUrl: String = "/img/no-image.png",
+        var fileName: String? = null
+    )
+
 
     @PutMapping
     fun editExercise(

@@ -45,12 +45,9 @@
                             modalContent: '',
                             async loadPage(exerciseId) {
                                 let url = `/therapist/exercises/${exerciseId}/modal`;
-                                let stepsUrl = `/therapist/exercises/${exerciseId}/steps`;
                                 let response = await fetch(url);
-                                let stepsResp = await fetch(stepsUrl);
-                                if (response.ok && stepsResp.ok) {
+                                if (response.ok) {
                                     this.modalContent = await response.text()
-                                        + await stepsResp.text();
                                     this.updateModal();
                                 } else {
                                     console.error('Error loading page');
@@ -303,7 +300,7 @@
                     <div class="modal modal-blur fade" id="modals-here" tabindex="-1">
                         <div class="modal-dialog modal-lg modal-dialog-centered">
                             <div class="modal-content">
-                                <div class="modal-body" x-html="modalContent"></div>
+                                <div class="modal-body"></div>
                             </div>
                         </div>
                     </div>
