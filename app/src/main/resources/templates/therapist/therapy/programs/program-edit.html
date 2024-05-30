@@ -42,23 +42,8 @@
                     document.addEventListener('alpine:init', () => {
                         Alpine.data('programForm', () => ({
                             exercises: initialExercises,
-                            modalContent: '',
-                            async loadPage(exerciseId) {
-                                let url = `/therapist/exercises/${exerciseId}/modal`;
-                                let response = await fetch(url);
-                                if (response.ok) {
-                                    this.modalContent = await response.text()
-                                    this.updateModal();
-                                } else {
-                                    console.error('Error loading page');
-                                }
-                            },
-                            updateModal() {
-                                let modalElement = document.getElementById('modals-here');
-                                modalElement.querySelector(
-                                    '.modal-content .modal-body').innerHTML = this.modalContent;
-                                var myModal = new bootstrap.Modal(modalElement);
-                                myModal.show();
+                            loadPage() {
+                                new bootstrap.Modal(document.getElementById('modals-here')).show();
                             },
                             remove(idx) {
                                 this.exercises.splice(idx, 1);
@@ -278,6 +263,8 @@
                                     <div class="link link-primary"
                                          role="button"
                                          :hx-get="`/therapist/exercises/${exercise.id}/modal`"
+                                         @click="loadPage(exercise.id)"
+                                         hx-target="#modal-body"
                                          x-text="exercise.title"></div>
                                     <small class="text-muted"
                                            x-text="`${exercise.type.label}, ${exercise.duration} мин.`"></small>
@@ -303,7 +290,7 @@
                     <div class="modal modal-blur fade" id="modals-here" tabindex="-1">
                         <div class="modal-dialog modal-lg modal-dialog-centered">
                             <div class="modal-content">
-                                <div class="modal-body"></div>
+                                <div class="modal-body" id="modal-body"></div>
                             </div>
                         </div>
                     </div>
