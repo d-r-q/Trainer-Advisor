@@ -8,8 +8,11 @@ import pro.azhidkov.platform.spring.http.hxRedirect
 import pro.azhidkov.platform.spring.mvc.modelAndView
 import pro.qyoga.app.platform.ResponseEntityExt
 import pro.qyoga.app.platform.notFound
+import pro.qyoga.app.therapist.therapy.exercises.EditExercisePageController.ExerciseStepProcessor.processSteps
 import pro.qyoga.core.therapy.exercises.ExercisesService
 import pro.qyoga.core.therapy.exercises.dtos.ExerciseSummaryDto
+import pro.qyoga.core.therapy.exercises.model.ExerciseStep
+
 
 @Controller
 @RequestMapping("/therapist/exercises/{exerciseId}")
@@ -26,6 +29,49 @@ class EditExercisePageController(
             "exercise" bindTo exercise
         }
     }
+
+
+    object ExerciseStepProcessor {
+        const val NO_IMAGE = "/img/no-image.png"
+        fun processSteps(
+            steps: List<ExerciseStep>?,
+            exerciseId: Long
+        ): List<ProcessingExerciseStep> {
+            return if (steps.isNullOrEmpty()) {
+                listOf(ProcessingExerciseStep("", NO_IMAGE))
+            } else {
+                steps.mapIndexed { idx, step ->
+                    val imageUrl =
+                        step.imageId?.let { "/therapist/exercises/$exerciseId/step-images/$idx" }
+                            ?: NO_IMAGE
+                    ProcessingExerciseStep(description = step.description, imageUrl = imageUrl)
+                }
+            }
+        }
+    }
+
+    @GetMapping("/modal")
+    fun getEditExercisePageModal(@PathVariable exerciseId: Long): ModelAndView {
+        val exercise = exercisesService.findById(exerciseId)
+            ?: return notFound
+
+        val processedSteps = processSteps(
+            exercise.steps,
+            exerciseId
+        )
+
+        return modelAndView("therapist/therapy/exercises/exercise-modal") {
+            "steps" bindTo processedSteps
+            "exercise" bindTo exercise
+        }
+    }
+
+    data class ProcessingExerciseStep(
+        var description: String,
+        var imageUrl: String = "/img/no-image.png",
+        var fileName: String? = null
+    )
+
 
     @PutMapping
     fun editExercise(
